@@ -30,7 +30,7 @@ val backendDependencies = Seq(
   caffeine,
 
   // commons text
-  "org.apache.commons" % "commons-text" % "1.4",
+  "org.apache.commons" % "commons-text" % "1.9",
 
   // Push JSON parser used for stream parsing...
   "com.lightbend.akka" %% "akka-stream-alpakka-json-streaming" % alpakkaVersion,
@@ -39,10 +39,13 @@ val backendDependencies = Seq(
   "com.lightbend.akka" %% "akka-stream-alpakka-csv" % alpakkaVersion,
 
   // IRI helper...
-  "org.apache.jena" % "jena-iri" % "3.9.0",
+  "org.apache.jena" % "jena-iri" % "3.17.0",
 
   // Ontology
-  "eu.ehri-project" % "ehri-definitions" % backendVersion
+  "eu.ehri-project" % "ehri-definitions" % backendVersion,
+
+  // Conversion to RDF
+  "com.herminiogarcia" % "shexml_2.12" % "0.3.1"
 )
 
 val coreDependencies = backendDependencies ++ Seq(
@@ -289,7 +292,10 @@ lazy val backend = Project(appName + "-backend", file("modules/backend"))
 
 lazy val core = Project(appName + "-core", file("modules/core"))
   .disablePlugins(PlayScala, SbtVuefy, SbtConcat, AssemblyPlugin)
-  .settings(name := appName + "-core", libraryDependencies ++= coreDependencies)
+  .settings(
+    name := appName + "-core",
+    libraryDependencies ++= coreDependencies,
+  )
   .settings(commonSettings: _*)
   .dependsOn(backend % "test->test;compile->compile")
 

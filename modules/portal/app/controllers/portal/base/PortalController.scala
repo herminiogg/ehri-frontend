@@ -1,7 +1,9 @@
 package controllers.portal.base
 
 import akka.http.scaladsl.model.Uri
+import akka.stream.scaladsl.Source
 import auth.handler.AuthHandler
+import com.herminiogarcia.shexml.MappingLauncher
 import config.AppConfig
 import controllers.base.{ControllerHelpers, CoreActionBuilders}
 import controllers.{AppComponents, renderError}
@@ -17,12 +19,15 @@ import services.data.{DataServiceBuilder, DataUser}
 import services.search.{SearchEngine, SearchItemResolver}
 import utils._
 import views.html.MarkdownRenderer
-import views.html.errors.{itemNotFound, maintenance, pageNotFound, gone}
+import views.html.errors.{gone, itemNotFound, maintenance, pageNotFound}
 
+import java.io.ByteArrayOutputStream
+import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
 import scala.concurrent.Future
 import scala.concurrent.Future.{successful => immediate}
+import scala.util.Try
 
 
 trait PortalController
@@ -222,21 +227,42 @@ trait PortalController
     val format: String = request.getQueryString("format")
       .filter(formats.contains).getOrElse(formats.head)
     val params = request.queryString.filterKeys(_ == "lang")
-    userDataApi.stream(s"classes/$entityType/$id/$format", params = params,
-      headers = Headers(HeaderNames.ACCEPT -> "text/xml,application/zip")).map { sr =>
-      val ct = sr.headers.get(HeaderNames.CONTENT_TYPE)
-        .flatMap(_.headOption).getOrElse(ContentTypes.XML)
+    if(format.toLowerCase == "ric_rdf/xml" || format.toLowerCase == "ric_turtle") {
+        val rules = if(entityType == EntityType.DocumentaryUnit) conf.shexmlUnits else conf.shexmlInstitutions
+        val result = rules.flatMap(r => {
+          val portalURL = new URL(conf.absoluteURL)
+          val variableName = if(entityType == EntityType.DocumentaryUnit) "holdings" else "repositories"
+          val apiSource = s"SOURCE $variableName <${portalURL.getProtocol}://${portalURL.getHost}:${portalURL.getPort}/api/v1/$id>"
+          val termsSource = s"SOURCE terms <${portalURL.getProtocol}://${portalURL.getHost}:${portalURL.getPort}/units/$id/export?asFile=true>"
+          val rulesWithPath = r
+            .replaceFirst("SOURCE (holdings|repositories) <placeholder>", apiSource)
+            .replaceFirst("SOURCE terms <placeholder>", termsSource)
+          val jenaFormat = if(format.toLowerCase == "ric_rdf/xml") "RDF/XML" else "Turtle"
+          val result = Try(new MappingLauncher().launchMapping(rulesWithPath, jenaFormat)).toOption
+          val ct = if(format.toLowerCase == "ric_rdf/xml") ContentTypes.XML else ContentTypes.TEXT
+          val disp = if (format.toLowerCase == "ric_rdf/xml")
+            Seq("Content-Disposition" -> ("attachment; filename=\"" + s"$id-ric.xml" + "\""))
+          else Seq("Content-Disposition" -> ("attachment; filename=\"" + s"$id-ric.ttl" + "\""))
+          result.map(re => Status(200).chunked(Source.single(re)).as(ct).withHeaders(disp: _*))
+        }).getOrElse(Status(503))
+        Future(result)
+    } else {
+      userDataApi.stream(s"classes/$entityType/$id/$format", params = params,
+        headers = Headers(HeaderNames.ACCEPT -> "text/xml,application/zip")).map { sr =>
+        val ct = sr.headers.get(HeaderNames.CONTENT_TYPE)
+          .flatMap(_.headOption).getOrElse(ContentTypes.XML)
 
-      val encodedId = java.net.URLEncoder.encode(id, StandardCharsets.UTF_8.name())
-      val disp = if (ct.contains("zip"))
-        Seq("Content-Disposition" -> ("attachment; filename=\"" + s"$encodedId-$format.zip" + "\""))
-      else if (asFile)
-        Seq("Content-Disposition" -> ("attachment; filename=\"" + s"$encodedId-$format.xml" + "\""))
-      else Seq.empty
+        val encodedId = java.net.URLEncoder.encode(id, StandardCharsets.UTF_8.name())
+        val disp = if (ct.contains("zip"))
+          Seq("Content-Disposition" -> ("attachment; filename=\"" + s"$encodedId-$format.zip" + "\""))
+        else if (asFile)
+          Seq("Content-Disposition" -> ("attachment; filename=\"" + s"$encodedId-$format.xml" + "\""))
+        else Seq.empty
 
-      // If we're streaming a zip file, send it as an attachment
-      // with a more useful filename...
-      Status(sr.status).chunked(sr.bodyAsSource).as(ct).withHeaders(disp: _*)
+        // If we're streaming a zip file, send it as an attachment
+        // with a more useful filename...
+        Status(sr.status).chunked(sr.bodyAsSource).as(ct).withHeaders(disp: _*)
+      }
     }
   }
 

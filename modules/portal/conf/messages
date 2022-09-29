@@ -149,6 +149,8 @@ export.format.ead=EAD 2002 XML
 export.format.eac=EAC 2010 XML
 export.format.ttl=TTL
 export.format.rdf_xml=RDF/XML
+export.format.ric_ttl=RiC 0.2 TTL
+export.format.ric_rdf_xml=RiC 0.2 RDF/XML
 
 #
 # Profile https://portal.ehri-project.eu/profile (and related pages)

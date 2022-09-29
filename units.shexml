@@ -1,0 +1,522 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX : <http://example.com/>
+PREFIX ehri: <https://data.ehri-project.eu/>
+PREFIX ehri_country: <https://data.ehri-project.eu/countries/>
+#TODO instutions with mixed paths
+PREFIX ehri_institution: <https://data.ehri-project.eu/institutions/>
+PREFIX ehri_units: <https://data.ehri-project.eu/units/>
+PREFIX ehri_terms: <http://data.ehri-project.eu/vocabularies/ehri-terms/>
+PREFIX ehri_instantiation: <https://data.ehri-project.eu/instantiations/>
+PREFIX ehri_language: <https://data.ehri-project.eu/languages/>
+PREFIX ehri_acquisition: <https://data.ehri-project.eu/acquisitions/>
+PREFIX dbr: <http://dbpedia.org/resource/>
+PREFIX schema: <http://schema.org/>
+PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rico: <https://www.ica.org/standards/RiC/ontology#>
+PREFIX ricoVocab: <https://www.ica.org/standards/RiC/vocabularies/documentaryFormTypes#>
+SOURCE holdings <placeholder>
+SOURCE terms <placeholder>
+
+ITERATOR components_iterator <jsonpath: $.data> {
+	PUSHED_FIELD id <id>
+	PUSHED_FIELD id_if_acquisition <[?(@.attributes.descriptions[*].acquisition)].id>
+  	PUSHED_FIELD archived_at <relationships.holder.data.id>
+	FIELD parent <relationships.parent.data.id>
+	FIELD local_id <attributes.localId>
+  	ITERATOR descriptions <attributes.descriptions[*]> {
+		FIELD description <*>
+    	FIELD name <name>
+		FIELD parallel_names <parallelFormsOfName[*]>
+		FIELD local_id <localId>
+		FIELD local_id_if_acquisition <[?(@.acquisition)].localId>
+        FIELD abstract <scopeAndContent>
+        FIELD physdesc <extentAndMedium>
+        FIELD system_arrangement <systemOfArrangement>
+        FIELD bioghist <biographicalHistory>
+		FIELD arch_hist <archivalHistory>
+        FIELD acquisition <acquisition>
+		FIELD dates <unitDates[*]>
+		FIELD language_code <languageCode>
+		POPPED_FIELD holding_id <id>
+		POPPED_FIELD holding_id_if_acquisition <id_if_acquisition>
+		POPPED_FIELD archive_id <archived_at>
+		ITERATOR language_of_materials <languageOfMaterials> {
+			FIELD lang <[*]>
+		}
+
+    }
+}
+
+ITERATOR ead_iterator <xpath: /ead> {
+	FIELD id <eadheader/eadid>
+	ITERATOR control_access_iterator </controlaccess> {
+		FIELD subject <subject[@source="ehri_terms"]/@authfilenumber>
+	}
+}
+
+EXPRESSION holding <holdings.components_iterator>
+EXPRESSION history <holding.descriptions.bioghist + "\n" + holding.descriptions.arch_hist>
+EXPRESSION instantiation_id <holdings.components_iterator.descriptions.holding_id + "-" + holdings.components_iterator.descriptions.local_id>
+EXPRESSION instantiation_id_if_acquisition <holdings.components_iterator.descriptions.holding_id_if_acquisition + "-" + holdings.components_iterator.descriptions.local_id_if_acquisition>
+EXPRESSION ead <terms.ead_iterator>
+
+AUTOINCREMENT person_id <"person_" + 0 to 99999999>
+AUTOINCREMENT organization_id <"organization_" + 0 to 99999999>
+AUTOINCREMENT genreform_id <"genreform_" + 0 to 99999999>
+AUTOINCREMENT authfilenumber_id <"authfilenumber_" + 0 to 99999999>
+AUTOINCREMENT location_id <"location" + 0 to 99999999>
+AUTOINCREMENT language_id <"language" + 0 to 99999999>
+AUTOINCREMENT acquisition_id <"language" + 0 to 99999999>
+MATCHER languages_codes <"Mandarin Chinese" AS cmn &
+"English" AS eng &
+"Spanish" AS spa &
+"English" AS eng &
+"Hindi" AS hin &
+"Arabic" AS ara &
+"Hindi" AS hin &
+"Hindi" AS hin &
+"Portuguese" AS por &
+"Bengali" AS ben &
+"Fula" AS ful &
+"French" AS fra &
+"Portuguese" AS por &
+"Indonesian" AS ind &
+"Bengali" AS ben &
+"Russian" AS rus &
+"Russian" AS rus &
+"Japanese" AS jpn &
+"Hindi" AS hin &
+"Punjabi" AS pan &
+"Russian" AS rus &
+"Russian" AS rus &
+"Bengali" AS ben &
+"German" AS deu &
+"Vietnamese" AS vie &
+"Urdu" AS urd &
+"Western Punjabi" AS pnb &
+"Javanese" AS jav &
+"Swahili" AS swh &
+"Turkish" AS tur &
+"Wu Chinese" AS wuu &
+"German" AS deu &
+"Hausa" AS hau &
+"Marathi" AS mar &
+"Malay" AS msa &
+"French" AS fra &
+"German" AS deu &
+"Telugu" AS tel &
+"Korean" AS kor &
+"Marathi" AS mar &
+"Cantonese" AS yue &
+"Marathi" AS mar &
+"Urdu" AS urd &
+"Vietnamese" AS vie &
+"Tamil" AS tam &
+"Italian" AS ita &
+"Yue Chinese" AS yue &
+"German" AS deu &
+"Persian" AS fas &
+"Telugu" AS tel &
+"Pashto" AS pus &
+"Southern Min" AS nan &
+"Nigerian Pidgin" AS pcm &
+"Gujarati" AS guj &
+"Romani" AS rom &
+"Tagalog" AS tgl &
+"Jin Chinese" AS cjy &
+"Kannada" AS kan &
+"Kannada" AS kan &
+"Thai" AS tha &
+"Yoruba" AS yor &
+"Polish" AS pol &
+"Pashto" AS pus &
+"Awadhi" AS awa &
+"Bhojpuri" AS bho &
+"Rajasthani" AS raj &
+"Xiang" AS hsn &
+"Oromo" AS orm &
+"Azerbaijani" AS aze &
+"Algerian Arabic" AS arq &
+"Ukrainian" AS ukr &
+"Maithili" AS mai &
+"Odia" AS ory &
+"Burmese" AS mya &
+"Gan" AS gan &
+"Kurdish" AS kur &
+"Hakka" AS hak &
+"Malayalam" AS mal &
+"Moroccan Arabic" AS ary &
+"Tagalog" AS tgl &
+"Uzbek" AS uzb &
+"Sundanese" AS sun &
+"Somali" AS som &
+"Malaysian" AS zsm &
+"Amharic" AS amh &
+"Sindhi" AS snd &
+"North Levantine Arabic" AS apc &
+"Nepali" AS nep &
+"Dutch" AS nld &
+"Romanian" AS ron &
+"Serbo Croatian" AS hbs &
+"Fula" AS ful &
+"Tagalog" AS tgl &
+"Sindhi" AS snd &
+"Sindhi" AS snd &
+"Thai" AS tha &
+"Saraiki" AS skr &
+"Cebuano" AS ceb &
+"Rajasthani" AS raj &
+"Bengali" AS ben &
+"Bengali" AS ben &
+"Malagasy" AS mlg &
+"Malagasy" AS mlg &
+"Igbo" AS ibo &
+"Malagasy" AS mlg &
+"Assamese" AS asm &
+"Chhattisgarhi" AS hne &
+"Nepali" AS nep &
+"Khmer" AS khm &
+"Swahili" AS swh &
+"Sinhala" AS sin &
+"Zulu" AS zul &
+"Nepali" AS nep &
+"Swahili" AS swa &
+"Isan" AS tts &
+"Kurmanji" AS kmr &
+"Modern Greek" AS ell &
+"South Azerbaijani" AS azb &
+"Bavarian" AS bar &
+"Tajik" AS tgk &
+"Zhuang" AS zha &
+"Maithili" AS mai &
+"Kazakh" AS kaz &
+"Greek" AS ell &
+"Chittagonian" AS ctg &
+"Magahi" AS mag &
+"Tsonga" AS tso &
+"Rajasthani" AS raj &
+"Chewa" AS nya &
+"Haitian Creole" AS hat &
+"Zulu" AS zul &
+"Nepali" AS nep &
+"Czech" AS ces &
+"Tunisian Arabic" AS aeb &
+"Xhosa" AS xho &
+"Dakhini" AS dcc &
+"Sylheti" AS syl &
+"Uyghur" AS uig &
+"Afrikaans" AS afr &
+"Min Bei" AS mnp &
+"Burmese" AS mya &
+"Malvi" AS mup &
+"Alemannic" AS gsw &
+"Kinyarwanda" AS kin &
+"Dari" AS prs &
+"Chewa" AS nya &
+"Swedish" AS swe &
+"North Azerbaijani" AS azj &
+"Min Dong" AS cdo &
+"Congo Swahili" AS swc &
+"Shona" AS sna &
+"Bulgarian" AS bul &
+"Hebrew" AS heb &
+"Serbian" AS srp &
+"Kirundi" AS run &
+"Nepali" AS nep &
+"Akan" AS aka &
+"Xhosa" AS xho &
+"Tamil" AS tam &
+"Tamazight" AS shi &
+"Bagheli" AS bfy &
+"Belarusian" AS bel &
+"Xhosa" AS xho &
+"Marwari (India)" AS rwr &
+"Marwari (India)" AS rwr &
+"Marwari (India)" AS rwr &
+"Quechua" AS que &
+"Tigrinya" AS tir &
+"Neapolitan" AS nap &
+"Makhuwa" AS vmw &
+"Sorani" AS ckb &
+"Afrikaans" AS afr &
+"Croatian" AS hrv &
+"Mongolian" AS mon &
+"Ilocano" AS ilo &
+"Turkmen" AS tuk &
+"Kashmiri" AS kas &
+"Gikuyu" AS kik &
+"Portuguese" AS por &
+"Luba Kasai" AS lua &
+"Albanian" AS sqi &
+"Hijazi Arabic" AS acw &
+"Northern Thai" AS nod &
+"Danish" AS dan &
+"Slovak" AS slk &
+"Lambadi" AS lmn &
+"Santali" AS sat &
+"Sesotho" AS sot &
+"Umbundu" AS umb &
+"Northern Thai" AS nod &
+"Turkish" AS tur &
+"Tigrinya" AS tir &
+"Hiligaynon" AS hil &
+"Danish" AS dan &
+"Kabyle" AS kab &
+"Minangkabau" AS min &
+"Danish" AS dan &
+"Sukuma" AS suk &
+"Tatar" AS tat &
+"Finnish" AS fin & "Latin" AS lat>
+MATCHER languages <"Mandarin Chinese" AS Q9192
+& "English" AS Q1860
+& "Spanish" AS Q1321
+& "English" AS Q1860
+& "Hindi" AS Q1568
+& "Arabic" AS Q13955
+& "Hindi" AS Q1568
+& "Hindi" AS Q1568
+& "Portuguese" AS Q5146
+& "Bengali" AS Q9610
+& "Fula" AS Q33454
+& "French" AS Q150
+& "Portuguese" AS Q5146
+& "Indonesian" AS Q9240
+& "Bengali" AS Q9610
+& "Russian" AS Q7737
+& "Russian" AS Q7737
+& "Japanese" AS Q5287
+& "Hindi" AS Q1568
+& "Punjabi" AS Q58635
+& "Russian" AS Q7737
+& "Russian" AS Q7737
+& "Bengali" AS Q9610
+& "German" AS Q188
+& "Vietnamese" AS Q9199
+& "Urdu" AS Q1617
+& "Western Punjabi" AS Q1389492
+& "Javanese" AS Q33549
+& "Swahili" AS Q3197533
+& "Turkish" AS Q256
+& "Wu Chinese" AS Q34290
+& "German" AS Q188
+& "Hausa" AS Q56475
+& "Marathi" AS Q1571
+& "Malay" AS Q9237
+& "French" AS Q150
+& "German" AS Q188
+& "Telugu" AS Q8097
+& "Korean" AS Q9176
+& "Marathi" AS Q1571
+& "Cantonese" AS Q9186
+& "Marathi" AS Q1571
+& "Urdu" AS Q1617
+& "Vietnamese" AS Q9199
+& "Tamil" AS Q5885
+& "Italian" AS Q652
+& "Yue Chinese" AS Q7033959
+& "German" AS Q188
+& "Persian" AS Q9168
+& "Telugu" AS Q8097
+& "Pashto" AS Q58680
+& "Southern Min" AS Q36495
+& "Nigerian Pidgin" AS Q33655
+& "Gujarati" AS Q5137
+& "Romani" AS Q13201
+& "Tagalog" AS Q34057
+& "Jin Chinese" AS Q56479
+& "Kannada" AS Q33673
+& "Kannada" AS Q33673
+& "Thai" AS Q9217
+& "Yoruba" AS Q34311
+& "Polish" AS Q809
+& "Pashto" AS Q58680
+& "Awadhi" AS Q29579
+& "Bhojpuri" AS Q33268
+& "Rajasthani" AS Q13196
+& "Xiang" AS Q13220
+& "Oromo" AS Q33864
+& "Azerbaijani" AS Q9292
+& "Algerian Arabic" AS Q56499
+& "Ukrainian" AS Q8798
+& "Maithili" AS Q36109
+& "Odia" AS Q33810
+& "Burmese" AS Q9228
+& "Gan" AS Q33475
+& "Kurdish" AS Q36368
+& "Hakka" AS Q33375
+& "Malayalam" AS Q36236
+& "Moroccan Arabic" AS Q56426
+& "Tagalog" AS Q34057
+& "Uzbek" AS Q9264
+& "Sundanese" AS Q34002
+& "Somali" AS Q13275
+& "Malaysian" AS Q15065
+& "Amharic" AS Q28244
+& "Sindhi" AS Q33997
+& "North Levantine Arabic" AS Q22809485
+& "Nepali" AS Q33823
+& "Dutch" AS Q7411
+& "Romanian" AS Q7913
+& "Serbo Croatian" AS Q9301
+& "Fula" AS Q33454
+& "Tagalog" AS Q34057
+& "Sindhi" AS Q33997
+& "Sindhi" AS Q33997
+& "Thai" AS Q9217
+& "Saraiki" AS Q33902
+& "Cebuano" AS Q33239
+& "Rajasthani" AS Q13196
+& "Bengali" AS Q9610
+& "Bengali" AS Q9610
+& "Malagasy" AS Q7930
+& "Malagasy" AS Q7930
+& "Igbo" AS Q33578
+& "Malagasy" AS Q7930
+& "Assamese" AS Q29401
+& "Chhattisgarhi" AS Q33158
+& "Nepali" AS Q33823
+& "Khmer" AS Q9205
+& "Swahili" AS Q3197533
+& "Sinhala" AS Q13267
+& "Zulu" AS Q10179
+& "Nepali" AS Q33823
+& "Swahili" AS Q7838
+& "Isan" AS Q33417
+& "Kurmanji" AS Q36163
+& "Modern Greek" AS Q36510
+& "South Azerbaijani" AS Q3449805
+& "Bavarian" AS Q29540
+& "Tajik" AS Q9260
+& "Zhuang" AS Q13216
+& "Maithili" AS Q36109
+& "Kazakh" AS Q9252
+& "Greek" AS Q9129
+& "Chittagonian" AS Q33173
+& "Magahi" AS Q33728
+& "Tsonga" AS Q34327
+& "Rajasthani" AS Q13196
+& "Chewa" AS Q33273
+& "Haitian Creole" AS Q33491
+& "Zulu" AS Q10179
+& "Nepali" AS Q33823
+& "Czech" AS Q9056
+& "Tunisian Arabic" AS Q56240
+& "Xhosa" AS Q13218
+& "Dakhini" AS Q669431
+& "Sylheti" AS Q2044560
+& "Uyghur" AS Q13263
+& "Afrikaans" AS Q14196
+& "Min Bei" AS Q36457
+& "Burmese" AS Q9228
+& "Malvi" AS Q33413
+& "Alemannic" AS Q131339
+& "Kinyarwanda" AS Q33573
+& "Dari" AS Q178440
+& "Chewa" AS Q33273
+& "Swedish" AS Q9027
+& "North Azerbaijani" AS Q3515311
+& "Min Dong" AS Q36455
+& "Congo Swahili" AS Q10961696
+& "Shona" AS Q34004
+& "Bulgarian" AS Q7918
+& "Hebrew" AS Q9288
+& "Serbian" AS Q9299
+& "Kirundi" AS Q33583
+& "Nepali" AS Q33823
+& "Akan" AS Q28026
+& "Xhosa" AS Q13218
+& "Tamil" AS Q5885
+& "Tamazight" AS Q34152
+& "Bagheli" AS Q2356364
+& "Belarusian" AS Q9091
+& "Xhosa" AS Q13218
+& "Marwari (India)" AS Q65455884
+& "Marwari (India)" AS Q65455884
+& "Marwari (India)" AS Q65455884
+& "Quechua" AS Q5218
+& "Tigrinya" AS Q34124
+& "Neapolitan" AS Q33845
+& "Makhuwa" AS Q33882
+& "Sorani" AS Q36811
+& "Afrikaans" AS Q14196
+& "Croatian" AS Q6654
+& "Mongolian" AS Q9246
+& "Ilocano" AS Q35936
+& "Turkmen" AS Q9267
+& "Kashmiri" AS Q33552
+& "Gikuyu" AS Q33587
+& "Portuguese" AS Q5146
+& "Luba Kasai" AS Q34173
+& "Albanian" AS Q8748
+& "Hijazi Arabic" AS Q56608
+& "Northern Thai" AS Q565110
+& "Danish" AS Q9035
+& "Slovak" AS Q9058
+& "Lambadi" AS Q33474
+& "Santali" AS Q33965
+& "Sesotho" AS Q34340
+& "Umbundu" AS Q36983
+& "Northern Thai" AS Q565110
+& "Turkish" AS Q256
+& "Tigrinya" AS Q34124
+& "Hiligaynon" AS Q35978
+& "Danish" AS Q9035
+& "Kabyle" AS Q35853
+& "Minangkabau" AS Q13324
+& "Danish" AS Q9035
+& "Sukuma" AS Q2638144
+& "Tatar" AS Q25285
+& "Finnish" AS Q1412 & "Latin" AS Q397>
+
+ehri:ArchiveComponent ehri_units:[holding.id] {
+  	a rico:Record ;
+	rico:hasDocumentaryFormType ricoVocab:FindingAid ;
+    rico:title [holding.descriptions.name] ;
+	rdfs:label [holding.descriptions.name] ;
+	rico:title [holding.descriptions.parallel_names] ;
+	rdfs:label [holding.descriptions.parallel_names] ;
+  	rico:scopeAndContent [holding.descriptions.abstract] @[holding.descriptions.language_code] ;
+	rico:hasInstantiation @ehri:Instantiation ;
+ 	rico:recordResourceExtent [holding.descriptions.physdesc] @[holding.descriptions.language_code] ;
+	rico:recordResourceStructure [holding.descriptions.system_arrangement] @[holding.descriptions.language_code] ;
+	rico:date [holding.descriptions.dates] ;
+	rico:isOrWasIncludedIn ehri_units:[holding.parent] ;
+	rico:hasOrHadLanguage @ehri:Language ;
+	rico:resultsOrResultedFrom @ehri:Acquisition ;
+}
+
+ehri:Language ehri_language:[holding.descriptions.language_of_materials.lang] {
+   	a rico:Language ;
+   	rico:name [holding.descriptions.language_of_materials.lang] ;
+}
+
+ehri:Instantiation ehri_instantiation:[instantiation_id] {
+	a rico:Instantiation ;
+	rico:identifier [holding.local_id] ;
+	rico:history [holding.descriptions.bioghist] @[holding.descriptions.language_code] ;
+	rico:isInstantationOf ehri_units:[holding.descriptions.holding_id] ;
+	rico:title [holding.descriptions.name] @[holding.descriptions.language_code] ;
+	rdfs:label [holding.descriptions.name] @[holding.descriptions.language_code] ;
+	rico:hasOrHadHolder ehri_institution:[holding.descriptions.archive_id] ;
+}
+
+ehri:Acquisition ehri_acquisition:[instantiation_id_if_acquisition] {
+	a rico:Activity ;
+	rico:type "Acquisition" ;
+	rdf:value [holding.descriptions.acquisition] ;
+}
+
+ehri:Institution ehri_institution:[holding.descriptions.archive_id] {
+	rico:isOrWasHolderOf ehri_instantiation:[instantiation_id] ;
+}
+
+ehri:ArchiveComponent ehri_units:[holding.parent] {
+	a rico:RecordSet ;
+	rico:includesOrIncluded ehri_units:[holding.id] ;
+}
+
+ehri:Term ehri_units:[ead.id] {
+  	rico:hasOrHadSubject ehri_terms:[ead.control_access_iterator.subject] ;
+}

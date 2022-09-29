@@ -91,6 +91,14 @@ case class AppConfig @Inject()(configuration: play.api.Configuration) {
     .getOptional[String]("ehri.message.file")
     .map(new File(_))
 
+  private lazy val shexmlUnitsFile: Option[File] =
+    configuration.getOptional[String]("ehri.portal.shexml.units")
+    .map(new File(_))
+
+  private lazy val shexmlInstitutionsFile: Option[File] =
+    configuration.getOptional[String]("ehri.portal.shexml.institutions")
+    .map(new File(_))
+
   private lazy val ipFilterFile: Option[File] = configuration.getOptional[String]("ehri.ipfilter.file")
     .map(new File(_))
 
@@ -114,6 +122,24 @@ case class AppConfig @Inject()(configuration: play.api.Configuration) {
         val ips: Seq[String] = FileUtils.readFileToString(f, "UTF-8").split('\n').toSeq
         if (ips.isEmpty) None
         else Some(ips)
+      } else None
+    }
+  }
+
+  def shexmlUnits: Option[String] = {
+    shexmlUnitsFile.flatMap { f =>
+      if (f.isFile && f.exists()) {
+        import org.apache.commons.io.FileUtils
+        Some(FileUtils.readFileToString(f, "UTF-8"))
+      } else None
+    }
+  }
+
+  def shexmlInstitutions: Option[String] = {
+    shexmlInstitutionsFile.flatMap { f =>
+      if (f.isFile && f.exists()) {
+        import org.apache.commons.io.FileUtils
+        Some(FileUtils.readFileToString(f, "UTF-8"))
       } else None
     }
   }

@@ -65,7 +65,7 @@ case class DocumentaryUnits @Inject()(
     }
   }
 
-  def export(id: String, asFile: Boolean): Action[AnyContent] = OptionalUserAction.async { implicit request =>
-    exportXml(EntityType.DocumentaryUnit, id, Seq("ead"), asFile)
+  def export(id: String, asFile: Boolean, format: String = "ead"): Action[AnyContent] = OptionalUserAction.async { implicit request =>
+    exportXml(EntityType.DocumentaryUnit, id, Seq(format), asFile)
   }
 }

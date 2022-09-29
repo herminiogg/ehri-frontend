@@ -16,7 +16,9 @@
                 @views.html.common.sidepanelToc {
                     @views.html.common.childItemSidebar(item, EntityType.DocumentaryUnit)
                     @views.html.common.exportItem(
-                        Map("eag" -> controllers.portal.routes.Repositories.export(item.id, asFile = true)))
+                        Map("eag" -> controllers.portal.routes.Repositories.export(item.id, asFile = true),
+                        "ric_rdf_xml" -> controllers.portal.routes.Repositories.export(item.id, asFile = true, format="RiC_RDF/XML"),
+                        "ric_ttl" -> controllers.portal.routes.Repositories.export(item.id, asFile = true, format="RiC_Turtle")))
                     @views.html.common.latestAction(item, controllers.portal.routes.Portal.itemHistory(item.id, modal = true))
                 }
             }

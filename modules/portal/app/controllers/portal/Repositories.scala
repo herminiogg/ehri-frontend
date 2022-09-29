@@ -70,7 +70,8 @@ case class Repositories @Inject()(
     }
   }
 
-  def export(id: String, asFile: Boolean): Action[AnyContent] = OptionalUserAction.async { implicit request =>
-    exportXml(EntityType.Repository, id, Seq("eag", "ead"), asFile)
+  def export(id: String, asFile: Boolean, format: String = "eag"): Action[AnyContent] = OptionalUserAction.async { implicit request =>
+    val formatSeq = if(format.toLowerCase == "eag") Seq("eag", "ead") else Seq(format)
+    exportXml(EntityType.Repository, id, formatSeq, asFile)
   }
 }
